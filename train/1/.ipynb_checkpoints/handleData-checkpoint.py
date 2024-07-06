@@ -75,7 +75,7 @@ def handle_minus(series, column_list):
         flag = None
         print(len(series[column]))
         for i in range(len(series[column])):
-            if series.loc[i, column] == -200:
+            if series.loc[i, column] <0 -200:
                 count += 1
                 if count == 1:
                     flag = i
@@ -95,26 +95,6 @@ def handle_minus(series, column_list):
     return series
 
 
-def add_data(series):
-    count = 0
-    flag = 0
-    for column in list(series)[2:]:
-
-        for i in range(len(series[column])):
-            if pd.isna(series.loc[i, column]):
-                count += 1
-                if count == 1:
-                    flag = i
-            else:
-                if count != 0 and count <= 6:
-                    series.loc[flag-1:i, column] = series.loc[flag-1:i, column].interpolate(method='linear')
-                count = 0
-                flag = 0
-        # 对NaN值进行线性插值
-        print(series)
-    return series
-
-
 # 示例使用
 df = pd.read_excel('./AirQualityUCI.xlsx')
 print(df)
@@ -125,8 +105,6 @@ for column in list(df)[2:]:
     df = OutlierDetection(df, column, ks_res)
 print(df)
 
- # 保存为Excel文件
+df.to_excel('handledData.xlsx', index=False)  # 保存为Excel文件
 # df = handle_consecutive_minus(df, )
 # print(df)
-df = add_data(df)
-df.to_excel('handledData3.xlsx', index=False)
