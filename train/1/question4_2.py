@@ -6,23 +6,23 @@ import numpy as np
 from numpy import nonzero, array
 from sklearn.cluster import KMeans
 from sklearn.metrics import f1_score, accuracy_score, normalized_mutual_info_score, rand_score, adjusted_rand_score
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
 
-# 数据保存在.csv文件中
-iris = pd.read_csv("dataset/Iris.csv", header=0)  # 鸢尾花数据集 Iris  class=3
-wine = pd.read_csv("dataset/wine.csv")  # 葡萄酒数据集 Wine  class=3
-seeds = pd.read_csv("dataset/seeds.csv")  # 小麦种子数据集 seeds  class=3
-wdbc = pd.read_csv("dataset/wdbc.csv")  # 威斯康星州乳腺癌数据集 Breast Cancer Wisconsin (Diagnostic)  class=2
-glass = pd.read_csv("dataset/glass.csv")  # 玻璃辨识数据集 Glass Identification  class=6
-df = iris  # 设置要读取的数据集
+df = pd.read_excel('./question4.xlsx')  # 设置要读取的数据集
+df.dropna(inplace=True)
 # print(df)
 
 columns = list(df.columns)  # 获取数据集的第一行，第一行通常为特征名，所以先取出
-features = columns[:len(columns) - 1]  # 数据集的特征名（去除了最后一列，因为最后一列存放的是标签，不是数据）
+features = columns[:len(columns)][1:]  # 数据集的特征名（去除了最后一列，因为最后一列存放的是标签，不是数据）
+print(features)
 dataset = df[features]  # 预处理之后的数据，去除掉了第一行的数据（因为其为特征名，如果数据第一行不是特征名，可跳过这一步）
+scaler = StandardScaler()
+dataset = scaler.fit_transform(dataset)
+print(dataset)
 attributes = len(df.columns) - 1  # 属性数量（数据集维度）
 original_labels = list(df[columns[-1]])  # 原始标签
+
 
 
 def initialize_centroids(data, k):
@@ -35,6 +35,7 @@ def get_clusters(data, centroids):
     # 计算数据点与质心之间的距离，并将数据点分配给最近的质心
     distances = np.linalg.norm(data[:, np.newaxis] - centroids, axis=2)
     cluster_labels = np.argmin(distances, axis=1)
+    print(cluster_labels)
     return cluster_labels
 
 
@@ -44,11 +45,12 @@ def update_centroids(data, cluster_labels, k):
     return new_centroids
 
 
-def k_means(data, k, T, epsilon):
+def k_means(data, k, T, epsilon, scalar):
     start = time.time()  # 开始时间，计时
     # 初始化质心
     centroids = initialize_centroids(data, k)
     t = 0
+    list = [[], [], [], [], [], []]
     while t <= T:
         # 分配簇
         cluster_labels = get_clusters(data, centroids)
@@ -58,12 +60,28 @@ def k_means(data, k, T, epsilon):
 
         # 检查收敛条件
         if np.linalg.norm(new_centroids - centroids) < epsilon:
+            for i in range(len(cluster_labels)):
+                if cluster_labels[i] == 0:
+                    list[0].append(i)
+                elif cluster_labels[i] == 1:
+                    list[1].append(i)
+                elif cluster_labels[i] == 2:
+                    list[2].append(i)
+                elif cluster_labels[i] == 3:
+                    list[3].append(i)
+                elif cluster_labels[i] == 4:
+                    list[4].append(i)
+                elif cluster_labels[i] == 5:
+                    list[5].append(i)
+            centroids = scalar.inverse_transform(centroids)
+            print(centroids)
             break
         centroids = new_centroids
+        # centroids = scalar.inverse_transform(centroids)
         print("第", t, "次迭代")
         t += 1
     print("用时：{0}".format(time.time() - start))
-    return cluster_labels, centroids
+    return cluster_labels, centroids, list
 
 
 # 计算聚类指标
@@ -100,16 +118,50 @@ def draw_cluster(dataset, centers, labels):
     plt.show()
 
 if __name__ == "__main__":
-    k = 3  # 聚类簇数
-    T = 100  # 最大迭代数
+    k = 6  # 聚类簇数
+    T = 1000  # 最大迭代数
     n = len(dataset)  # 样本数
     epsilon = 1e-5
     # 预测全部数据
-    labels, centers = k_means(np.array(dataset), k, T, epsilon)
+    labels, centers, list = k_means(np.array(dataset), k, T, epsilon, scaler)
     # print(labels)
-    F_measure, ACC, NMI, RI, ARI = clustering_indicators(original_labels, labels)  # 计算聚类指标
-    print("F_measure:", F_measure, "ACC:", ACC, "NMI", NMI, "RI", RI, "ARI", ARI)
+    # F_measure, ACC, NMI, RI, ARI = clustering_indicators(original_labels, labels)  # 计算聚类指标
+    # print("F_measure:", F_measure, "ACC:", ACC, "NMI", NMI, "RI", RI, "ARI", ARI)
     # print(membership)
-    # print(centers)
-    # print(dataset)
-    draw_cluster(dataset, centers, labels=labels)
+    print(centers)
+    print(list[0])
+    print(list[1])
+    print(list[2])
+    print(list[3])
+    print(list[4])
+    print(list[5])
+    plt.rcParams['axes.unicode_minus'] = False  # 坐标轴负号的处理
+    plt.axes(aspect='equal')  # 将横、纵坐标轴标准化处理，确保饼图是一个正圆，否则为椭圆
+
+    length = len(dataset)
+    print(length)
+    edu = [len(list[0]) / length, len(list[1]) / length, len(list[2]) / length, len(list[3]) / length, len(list[4]) / length]
+    labels = ['batter', 'great', 'middle', 'bad', 'worse']
+    explode = [0, 0.1, 0, 0, 0]  # 生成数据，用于凸显大专学历人群
+    colors = ['#9999ff', '#ff9999', '#7777aa', '#2442aa', '#dd5555']  # 自定义颜色
+
+    plt.pie(x=edu,  # 绘图数据
+            explode=explode,  # 指定饼图某些部分的突出显示，即呈现爆炸式
+            labels=labels,  # 添加教育水平标签
+            colors=colors,
+            autopct='%.2f%%',  # 设置百分比的格式，这里保留两位小数
+            pctdistance=0.8,  # 设置百分比标签与圆心的距离
+            labeldistance=1.1,  # 设置教育水平标签与圆心的距离
+            startangle=180,  # 设置饼图的初始角度
+            radius=1.2,  # 设置饼图的半径
+            counterclock=False,  # 是否逆时针，这里设置为顺时针方向
+            wedgeprops={'linewidth': 1.5, 'edgecolor': 'green'},  # 设置饼图内外边界的属性值
+            textprops={'fontsize': 10, 'color': 'black'},  # 设置文本标签的属性值
+            )
+
+    # 添加图标题
+    # 显示图形
+    plt.show()
+    #print(dataset)
+    #draw_cluster(dataset, centers, labels=labels)
+
