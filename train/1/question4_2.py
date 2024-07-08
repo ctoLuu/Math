@@ -17,8 +17,8 @@ columns = list(df.columns)  # 获取数据集的第一行，第一行通常为�
 features = columns[:len(columns)][1:]  # 数据集的特征名（去除了最后一列，因为最后一列存放的是标签，不是数据）
 print(features)
 dataset = df[features]  # 预处理之后的数据，去除掉了第一行的数据（因为其为特征名，如果数据第一行不是特征名，可跳过这一步）
-scaler = StandardScaler()
-dataset = scaler.fit_transform(dataset)
+# scaler = StandardScaler()
+# dataset = scaler.fit_transform(dataset)
 print(dataset)
 attributes = len(df.columns) - 1  # 属性数量（数据集维度）
 original_labels = list(df[columns[-1]])  # 原始标签
@@ -45,7 +45,7 @@ def update_centroids(data, cluster_labels, k):
     return new_centroids
 
 
-def k_means(data, k, T, epsilon, scalar):
+def k_means(data, k, T, epsilon):
     start = time.time()  # 开始时间，计时
     # 初始化质心
     centroids = initialize_centroids(data, k)
@@ -73,7 +73,7 @@ def k_means(data, k, T, epsilon, scalar):
                     list[4].append(i)
                 elif cluster_labels[i] == 5:
                     list[5].append(i)
-            centroids = scalar.inverse_transform(centroids)
+            # centroids = scalar.inverse_transform(centroids)
             print(centroids)
             break
         centroids = new_centroids
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     n = len(dataset)  # 样本数
     epsilon = 1e-5
     # 预测全部数据
-    labels, centers, list = k_means(np.array(dataset), k, T, epsilon, scaler)
+    labels, centers, list = k_means(np.array(dataset), k, T, epsilon)
     # print(labels)
     # F_measure, ACC, NMI, RI, ARI = clustering_indicators(original_labels, labels)  # 计算聚类指标
     # print("F_measure:", F_measure, "ACC:", ACC, "NMI", NMI, "RI", RI, "ARI", ARI)
@@ -138,30 +138,30 @@ if __name__ == "__main__":
     plt.rcParams['axes.unicode_minus'] = False  # 坐标轴负号的处理
     plt.axes(aspect='equal')  # 将横、纵坐标轴标准化处理，确保饼图是一个正圆，否则为椭圆
 
-    length = len(dataset)
-    print(length)
-    edu = [len(list[0]) / length, len(list[1]) / length, len(list[2]) / length, len(list[3]) / length, len(list[4]) / length]
-    labels = ['batter', 'great', 'middle', 'bad', 'worse']
-    explode = [0, 0.1, 0, 0, 0]  # 生成数据，用于凸显大专学历人群
-    colors = ['#9999ff', '#ff9999', '#7777aa', '#2442aa', '#dd5555']  # 自定义颜色
-
-    plt.pie(x=edu,  # 绘图数据
-            explode=explode,  # 指定饼图某些部分的突出显示，即呈现爆炸式
-            labels=labels,  # 添加教育水平标签
-            colors=colors,
-            autopct='%.2f%%',  # 设置百分比的格式，这里保留两位小数
-            pctdistance=0.8,  # 设置百分比标签与圆心的距离
-            labeldistance=1.1,  # 设置教育水平标签与圆心的距离
-            startangle=180,  # 设置饼图的初始角度
-            radius=1.2,  # 设置饼图的半径
-            counterclock=False,  # 是否逆时针，这里设置为顺时针方向
-            wedgeprops={'linewidth': 1.5, 'edgecolor': 'green'},  # 设置饼图内外边界的属性值
-            textprops={'fontsize': 10, 'color': 'black'},  # 设置文本标签的属性值
-            )
-
-    # 添加图标题
-    # 显示图形
-    plt.show()
-    #print(dataset)
-    #draw_cluster(dataset, centers, labels=labels)
+    # length = len(dataset)
+    # print(length)
+    # edu = [len(list[0]) / length, len(list[1]) / length, len(list[2]) / length, len(list[3]) / length, len(list[4]) / length]
+    # labels = ['batter', 'great', 'middle', 'bad', 'worse']
+    # explode = [0, 0.1, 0, 0, 0]  # 生成数据，用于凸显大专学历人群
+    # colors = ['#9999ff', '#ff9999', '#7777aa', '#2442aa', '#dd5555']  # 自定义颜色
+    #
+    # plt.pie(x=edu,  # 绘图数据
+    #         explode=explode,  # 指定饼图某些部分的突出显示，即呈现爆炸式
+    #         labels=labels,  # 添加教育水平标签
+    #         colors=colors,
+    #         autopct='%.2f%%',  # 设置百分比的格式，这里保留两位小数
+    #         pctdistance=0.8,  # 设置百分比标签与圆心的距离
+    #         labeldistance=1.1,  # 设置教育水平标签与圆心的距离
+    #         startangle=180,  # 设置饼图的初始角度
+    #         radius=1.2,  # 设置饼图的半径
+    #         counterclock=False,  # 是否逆时针，这里设置为顺时针方向
+    #         wedgeprops={'linewidth': 1.5, 'edgecolor': 'green'},  # 设置饼图内外边界的属性值
+    #         textprops={'fontsize': 10, 'color': 'black'},  # 设置文本标签的属性值
+    #         )
+    #
+    # # 添加图标题
+    # # 显示图形
+    # plt.show()
+    print(dataset)
+    draw_cluster(dataset, centers, labels=labels)
 

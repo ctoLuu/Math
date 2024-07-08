@@ -31,10 +31,10 @@ def create_dataset(dataset, look_back=1):
 def build_and_train_model(data_center, look_back=168):
     X, Y = create_dataset(data_center, look_back)
     model = Sequential()
-    model.add(LSTM(100, input_shape=(look_back, 2), dropout=0.2))
+    model.add(LSTM(40, input_shape=(look_back, 2), dropout=0.2))
     model.add(Dense(10))
-    model.compile(optimizer='SGD', loss='mean_squared_error')
-    model.fit(X, Y, epochs=80, batch_size=1, verbose=2)
+    model.compile(optimizer='Adam', loss='mean_squared_error')
+    model.fit(X, Y, epochs=400, batch_size=1, verbose=2)
     return model
 
 
