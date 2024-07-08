@@ -124,9 +124,5 @@ for column in list(df)[2:]:
     ks_res = KsNormDetect(df, column)
     df = OutlierDetection(df, column, ks_res)
 print(df)
-
- # 保存为Excel文件
-# df = handle_consecutive_minus(df, )
-# print(df)
 df = add_data(df)
 df.to_excel('handledData3.xlsx', index=False)

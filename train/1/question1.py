@@ -4,8 +4,6 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates  # 导入dates模块
-
-
 plt.rcParams['font.sans-serif'] = ['SimHei']
 def KsNormDetect(df, column):
     # 计算均值
@@ -104,11 +102,9 @@ df['CO(GT)'] = df['CO(GT)'].interpolate(method='linear')
 df['C6H6(GT)'] = df['C6H6(GT)'].interpolate(method='linear')
 X = df[['CO(GT)']]  # 自变量，用列名替换'feature'
 y = df[['C6H6(GT)']]     # 因变量，用列名替换'target'
-
-# 将X转换为二维数组，因为scikit-learn需要这样的格式
 X = X.values.reshape(-1, 1)
 
-# 创建线性回归模型实例
+# 创建线性回归模型
 model = LinearRegression()
 
 # 拟合模型
@@ -124,42 +120,16 @@ print("截距:", intercept)
 
 # 绘制数据点
 plt.scatter(X, y, s=30, marker='o', facecolors='none', edgecolors='blue', label='数据点')
-
-
 # 使用模型参数绘制拟合线
 X_line = np.array([np.min(X), np.max(X)]).reshape(-1, 1)  # 生成拟合线需要的X值范围
 y_line = intercept + slope * X_line  # 计算对应的y值
 plt.plot(X_line, y_line, color='red', label='拟合线')
-
 # 添加图例
 plt.legend()
-
 # 设置图表标题和轴标签
 plt.title('线性回归分析')
 plt.xlabel('CO(GT)')
 plt.ylabel('C6H6(GT)')
-
 # 显示图表
 plt.show()
-
 df.to_excel('handledData2.xlsx', index=False)
-df['日期时间'] = df['Date'].astype(str) + ' ' + df['Time'].astype(str)
-df['日期时间'] = pd.to_datetime(df['日期时间'], errors='coerce')
-df.drop(['Date', 'Time'], axis=1, inplace=True)
-df.rename(columns={'日期时间': '日期小时'}, inplace=True)
-print(df)
-df.set_index('日期小时', inplace=True)
-plt.rcParams.update({'font.size': 60})
-# 绘制数据随时间变化的图
-plt.figure(figsize=(50, 25))  # 可以设置图表的大小
-plt.plot(df.index, df['CO(GT)'], marker='o')  # 使用线和点来绘制
-
-# 设置图表标题和轴标签
-plt.xlabel('Date Time', fontsize=70)
-plt.ylabel('CO(GT)',fontsize=70)
-
-# 格式化x轴的时间显示
-plt.gcf().autofmt_xdate()  # 自动旋转日期标记
-plt.gca().xaxis.set_tick_params(labelsize=30)
-# 显示图表
-plt.show()

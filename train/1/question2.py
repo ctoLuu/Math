@@ -5,7 +5,6 @@ from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates  # 导入dates模块
 
-
 plt.rcParams['font.sans-serif'] = ['SimHei']
 df = pd.read_excel('./handledData3.xlsx')
 df = df[0:184]
@@ -28,26 +27,24 @@ intercept = model.intercept_
 # 打印模型参数
 print("斜率:", slope)
 print("截距:", intercept)
-#
-# # 绘制数据点
-# plt.scatter(X, y, s=30, marker='o', facecolors='none', edgecolors='blue', label='数据点')
-#
-#
-# # 使用模型参数绘制拟合线
+
+# 绘制数据点
+plt.scatter(X, y, s=30, marker='o', facecolors='none', edgecolors='blue', label='数据点')
+# 使用模型参数绘制拟合线
 X_line = np.array([np.min(X), np.max(X)]).reshape(-1, 1)  # 生成拟合线需要的X值范围
 y_line = intercept + slope * X_line  # 计算对应的y值
 plt.plot(X_line, y_line, color='red', label='拟合线', linewidth=3)
 #
-# # 添加图例
-# plt.legend()
-#
-# # 设置图表标题和轴标签
-# plt.title('线性回归分析')
-# plt.xlabel('C6H6(GT)')
-# plt.ylabel('NMHC(GT)')
-#
-# # 显示图表
-# plt.show()
+# 添加图例
+plt.legend()
+
+# 设置图表标题和轴标签
+plt.title('线性回归分析')
+plt.xlabel('C6H6(GT)')
+plt.ylabel('NMHC(GT)')
+
+# 显示图表
+plt.show()
 
 df = pd.read_excel('./handledData3.xlsx')
 for i in range(185, 9357):
