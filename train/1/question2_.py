@@ -19,22 +19,22 @@ plt.rcParams['axes.unicode_minus'] = False
 def create_dataset(dataset, look_back=1):
     X, Y = [], []
     for i in range(len(dataset) - look_back - 1):
-        a = dataset.iloc[i:(i + look_back)][['Time', 'NOx(GT)']].values
+        a = dataset.iloc[i:(i + look_back)][['Time', 'NO2(GT)']].values
         X.append(a)
-        Y.append(dataset.iloc[i + look_back]['NOx(GT)'])
+        Y.append(dataset.iloc[i + look_back]['NO2(GT)'])
     print(len(X))
     print(len(Y))
     return np.array(X), np.array(Y)
 
 
 # 构建并训练模型
-def build_and_train_model(data_center, look_back=48):
+def build_and_train_model(data_center, look_back=168):
     X, Y = create_dataset(data_center, look_back)
     model = Sequential()
-    model.add(LSTM(80, input_shape=(look_back, 2), dropout=0.2))
+    model.add(LSTM(120, input_shape=(look_back, 2), dropout=0.2))
     model.add(Dense(6))
     model.compile(optimizer='SGD', loss='mean_squared_error')
-    model.fit(X, Y, epochs=50, batch_size=1, verbose=2)
+    model.fit(X, Y, epochs=40, batch_size=1, verbose=2)
     return model
 
 
@@ -59,11 +59,11 @@ def predict_next_30_days(model, last_24_hours, scaler, look_back=24):
 results_csv_path = '结果表.csv'
 with open(results_csv_path, 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
-    writer.writerow(['Date', 'Time', 'NOx(GT)'])
+    writer.writerow(['Date', 'Time', 'NO2(GT)'])
     df = pd.read_excel('./handledData4.xlsx')
     print(df)
     df = df[0:9355]
-    df = df.dropna(subset=['NOx(GT)'])
+    df = df.dropna(subset=['NO2(GT)'])
     df['Time'] = df['Time'].str.slice(start=0, stop=2).astype(int)
     print(df)
     df['日期时间'] = df['Date'].astype(str) + '-' + df['Time'].astype(str)
@@ -71,12 +71,12 @@ with open(results_csv_path, 'w', newline='') as csvfile:
     df.rename(columns={'日期时间': '日期小时'}, inplace=True)
     df.set_index('日期小时', inplace=True)
     scaler = MinMaxScaler(feature_range=(0, 1))
-    df['NOx(GT)'] = scaler.fit_transform(df[['NOx(GT)']])
+    df['NO2(GT)'] = scaler.fit_transform(df[['NO2(GT)']])
     print(f"Processing ...")
-    data_center = df[['Date', 'Time', 'NOx(GT)']]
+    data_center = df[['Date', 'Time', 'NO2(GT)']]
     print(data_center)
-    model = build_and_train_model(data_center, look_back=48)
-    last_24_hours = data_center.tail(24)[['Time', 'NOx(GT)']].values.reshape(1, 24, 2)
+    model = build_and_train_model(data_center, look_back=480)
+    last_24_hours = data_center.tail(24)[['Time', 'NO2(GT)']].values.reshape(1, 24, 2)
     predictions = predict_next_30_days(model, last_24_hours, scaler)
     start_date = data_center['Date'].max() + timedelta(days=1)
     for i in range(30 * 24):
@@ -86,7 +86,7 @@ print("预测结果已保存到", results_csv_path)
 
 df = pd.read_excel('./handledData4.xlsx')
 df = df[0:9355]
-df = df.dropna(subset=['NOx(GT)'])
+df = df.dropna(subset=['NO2(GT)'])
 df['Time'] = df['Time'].str.slice(start=0, stop=2).astype(int)
 df['Date'] = pd.to_datetime(df['Date'])
 data2_path = "结果表.csv"
@@ -124,8 +124,8 @@ tem = pd.concat([tem, pre_december_data, post_december_data], ignore_index=True)
 # 创建 FacetGrid 对象
 g = sns.FacetGrid(data=tem, hue="颜色", height=4, aspect=6, sharex=False, sharey=False)
 # 绘制线图
-g = g.map(sns.lineplot, "日期小时", "NOx(GT)", palette="Set1", lw=1)
-# sns.lineplot(data=tem, x='日期小时', y='NOx(GT)', palette="Set1", lw=2.5)
+g = g.map(sns.lineplot, "日期小时", "NO2(GT)", palette="Set1", lw=1)
+# sns.lineplot(data=tem, x='日期小时', y='NO2(GT)', palette="Set1", lw=2.5)
 # 设置x轴标签
 plt.xlabel('Time')
 # 显示图形
