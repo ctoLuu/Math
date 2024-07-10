@@ -118,7 +118,7 @@ def draw_cluster(dataset, centers, labels):
     plt.show()
 
 if __name__ == "__main__":
-    k = 6  # 聚类簇数
+    k = 4  # 聚类簇数
     T = 1000  # 最大迭代数
     n = len(dataset)  # 样本数
     epsilon = 1e-5
