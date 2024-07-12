@@ -39,8 +39,7 @@ for i in range(len(df)):
     for j in range(len(df)):
         distance = haversine(df.loc[i, '经度'], df.loc[i, '纬度'],
                              df.loc[j, '经度'], df.loc[j, '纬度']) / 60
-        if distance > 8 or distance == 0:
-            count += 1
+        if distance == 0:
             distance = np.nan
         time_matrix[i][j] = distance
         time_matrix[j][i] = distance
