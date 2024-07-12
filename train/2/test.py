@@ -15,8 +15,10 @@ def has_alternate_pattern_np(arr):
 a = np.array([0, 1, 0, 1, 0, 1, 2, 0, 4, 5, 6])
 print(has_alternate_pattern_np(a))
 print(np.sum(a==0))
+import random
 zero_indices = np.where(a == 0)[0]
-print(zero_indices)
+zero_pos1 = random.choice(range(len(zero_indices)))
+print(zero_pos1)
 sub_arrays = []
 start_index = 0
 for index in zero_indices:
