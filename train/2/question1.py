@@ -7,7 +7,7 @@ from copy import deepcopy
 
 
 class GA(object):
-    def __init__(self, time_matrix, send_array, maxgen=400, size_pop=5000, cross_prob=0.80, pmuta_prob=0.02, select_prob=0.8):
+    def __init__(self, time_matrix, send_array, maxgen=1000, size_pop=50000, cross_prob=0.80, pmuta_prob=0.02, select_prob=0.8):
         self.maxgen = maxgen  # 最大迭代次数
         self.size_pop = size_pop  # 群体个数
         self.cross_prob = cross_prob  # 交叉概率
