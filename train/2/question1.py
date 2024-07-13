@@ -7,7 +7,7 @@ from copy import deepcopy
 
 
 class GA(object):
-    def __init__(self, time_matrix, send_array, maxgen=500, size_pop=100000, cross_prob=0.80, pmuta_prob=0.02, select_prob=0.8):
+    def __init__(self, time_matrix, send_array, maxgen=400, size_pop=10000, cross_prob=0.80, pmuta_prob=0.02, select_prob=0.8):
         self.maxgen = maxgen  # 最大迭代次数
         self.size_pop = size_pop  # 群体个数
         self.cross_prob = cross_prob  # 交叉概率
@@ -106,10 +106,9 @@ class GA(object):
                     if time_list[time_list == 0] > 1 and time_list[0] == 1:
                         zero_indices = np.where(np.array(time_list) == 0)[0]
                         res, sub_array = self.find_fit(arr, time_list)
-                        new_array += list()
+                        new_array += list(sub_array)
                         fitness += res
                         flag = 1
-                        break
                 if flag == 0:
                     fitness += 1
                     new_array += list(arr)
@@ -127,7 +126,7 @@ class GA(object):
         time2 = 0
         for i in range(len(zero_indices)):
             new_array1.append(array[zero_indices[i]])
-            time1 = self.comp_time(new_array1, 0)
+        time1 = self.comp_time(new_array1, 0)
         for i in range(len(no_indices)):
             new_array1.append(array[no_indices[i]])
 
@@ -155,8 +154,11 @@ class GA(object):
         while index != len(array)-1:
             next_time = time_matrix[array[index], array[index+1]]
             current_time += next_time
+            index += 1
             if flag == 0 and current_time > 4:
                 return False
+        if index == 0:
+            return True
         return current_time
 
     def select_sub(self):
@@ -227,7 +229,6 @@ class GA(object):
             new_array = self.decode(new_array)
             new_array = self.encode(new_array)
             fit, new_array = self.comp_fit(new_array)
-            new_array = self.encode(new_array)
             fitness.append(fit)
             mutate_array.append(new_array)
 
@@ -272,7 +273,7 @@ if __name__ == "__main__":
         module.reins()
 
         for j in range(module.size_pop):
-            module.fitness[j], _ = module.comp_fit(module.chrom[j])
+            module.fitness[j], module.chrom[j] = module.comp_fit(module.chrom[j])
 
         index = module.fitness.argmin()
         if (i + 1) % 10 == 0:

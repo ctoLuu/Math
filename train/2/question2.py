@@ -6,7 +6,7 @@ import random
 from copy import deepcopy
 
 class GA(object):
-    def __init__(self, time_matrix, distance_matrix, send_data, send_array, maxgen=1000, size_pop=50000, cross_prob=0.80, pmuta_prob=0.02, select_prob=0.8):
+    def __init__(self, time_matrix, distance_matrix, send_data, send_array, maxgen=1000, size_pop=100, cross_prob=0.80, pmuta_prob=0.02, select_prob=0.8):
         self.maxgen = maxgen  # 最大迭代次数
         self.size_pop = size_pop  # 群体个数
         self.cross_prob = cross_prob  # 交叉概率
@@ -18,14 +18,6 @@ class GA(object):
         self.send_data = send_data
         self.send_array = send_array
         self.day_num = [20, 27, 27, 24]
-        self.day1_node = list((self.send_data.get_group((1, ))['门店名称']).to_numpy())
-        self.day2_node = list((self.send_data.get_group((2, ))['门店名称']).to_numpy())
-        self.day3_node = list((self.send_data.get_group((3, ))['门店名称']).to_numpy())
-        self.day4_node = list((self.send_data.get_group((4, ))['门店名称']).to_numpy())
-        self.day1_time = list((self.send_data.get_group((1, ))['配送时间']).to_numpy())
-        self.day2_time = list((self.send_data.get_group((2, ))['配送时间']).to_numpy())
-        self.day3_time = list((self.send_data.get_group((3, ))['配送时间']).to_numpy())
-        self.day4_time = list((self.send_data.get_group((4, ))['配送时间']).to_numpy())
 
         self.select_num = max(floor(self.size_pop * self.select_prob + 0.5), 2)
         self.chrom = []
@@ -35,25 +27,29 @@ class GA(object):
         self.best_path = []
 
     def rand_chrom(self):
-        part1 = np.array(list(range(20)))
-        part2 = np.array(list(range(20, 47)))
-        part3 = np.array(list(range(47, 74)))
-        part4 = np.array(list(range(74, 98)))
+        part1 = np.array(list(range(1, 21)))
+        part2 = np.array(list(range(21, 48)))
+        part3 = np.array(list(range(48, 75)))
+        part4 = np.array(list(range(75, 99)))
         for i in range(self.size_pop):
             np.random.shuffle(part1)
             np.random.shuffle(part2)
             np.random.shuffle(part3)
             np.random.shuffle(part4)
             rand_ch = np.concatenate((part1, part2, part3, part4))
-            rand_ch = self.encode(rand_ch)
+            new_rand_ch = self.encode(rand_ch)
+            self.fitness[i] = self.comfit(new_rand_ch)
+            self.chrom.append(new_rand_ch)
 
     def simple_encode(self, array):
         encode_array = np.insert(array, 0, 0)
         current_time = 0
         index = 0
         while index != len(encode_array) - 1:
-            next_time = time_matrix[encode_array[index], encode_array[index + 1]]
-            current_time += next_time
+            if self.send_data.loc[encode_array[index], '门店名称'] != self.send_data.loc[encode_array[index + 1], '门店名称']:
+                next_time = time_matrix[self.send_data.loc[encode_array[index], '门店名称'], self.send_data.loc[encode_array[index + 1], '门店名称']]
+            else:
+                next_time = 0
             if current_time > 8:
                 current_time = 0
                 encode_array = np.insert(encode_array, index + 1, 0)
@@ -73,6 +69,7 @@ class GA(object):
                 encode_array = np.insert(encode_array, index + 1, 0)
                 index += 1
                 continue
+            index += 1
         return encode_array
 
     def encode(self, array):
@@ -80,7 +77,10 @@ class GA(object):
         current_time = 0
         index = 0
         while index != len(encode_array) - 1:
-            next_time = time_matrix[encode_array[index], encode_array[index + 1]]
+            if self.send_data.loc[encode_array[index], '门店名称'] != self.send_data.loc[encode_array[index+1], '门店名称']:
+                next_time = time_matrix[self.send_data.loc[encode_array[index], '门店名称'], self.send_data.loc[encode_array[index+1], '门店名称']]
+            else:
+                next_time = 0
             current_time += next_time
             if current_time > 8:
                 current_time = 0
@@ -94,13 +94,14 @@ class GA(object):
                 current_weight = 0
                 index += 1
                 continue
-            next_weight = send_data.loc[encode_array[index+1], '总货量']
+            next_weight = self.send_data.loc[encode_array[index+1], '总货量']
             current_weight += next_weight
             if current_weight > 3:
                 current_weight = 0
                 encode_array = np.insert(encode_array, index + 1, 0)
                 index += 1
                 continue
+            index += 1
 
         sub_arrays = [[], [], [], []]
         flag = 0
@@ -108,23 +109,26 @@ class GA(object):
         for i in range(len(encode_array)):
             if encode_array[i] == 0:
                 sub_arrays[flag].append(0)
-            elif encode_array[i] < 20:
+            elif encode_array[i] < 21:
                 sub_arrays[0].append(encode_array[i])
-            elif encode_array[i] < 47:
+                flag = 0
+            elif encode_array[i] < 48:
                 sub_arrays[1].append(encode_array[i])
-            elif encode_array[i] < 74:
+                flag = 1
+            elif encode_array[i] < 75:
                 sub_arrays[2].append(encode_array[i])
-            elif encode_array[i] < 98:
+                flag = 2
+            elif encode_array[i] < 99:
                 sub_arrays[3].append(encode_array[i])
-
+                flag = 3
         for sub_array in sub_arrays:
             sub_array = np.array(sub_array)
             zero_indices = np.where(sub_array == 0)[0]
             arrs = []
             start_index = 0
-            for index in zero_indices:
-                arrs.append(sub_array[start_index:index])
-                start_index = index + 1
+            for i in zero_indices:
+                arrs.append(sub_array[start_index:i])
+                start_index = i + 1
             arrs.append(sub_array[start_index:])
 
             flag = 0
@@ -161,7 +165,6 @@ class GA(object):
                             new_arr = self.find_fit(arr, time_list)
                             final += list(new_arr)
                             flag = 1
-                            break
                     if flag == 0:
                         new_sub_array += list(arr)
                     else:
@@ -170,7 +173,7 @@ class GA(object):
                 time_list = []
                 for i in arrs[0]:
                     time_list.append(self.send_data.loc[i, '配送时间'])
-                if len(time_list[time_list != 0]) > 0:
+                if time_list[time_list != 0] > 0:
                     new_sub_array += arrs[0]
                 else:
                     arrs[0] += new_sub_array
@@ -180,9 +183,10 @@ class GA(object):
             new_sub_array = np.array(new_sub_array)
             sub_arrays[index] = new_sub_array
             index += 1
-        sub_arrays = self.decode(sub_arrays)
-        sub_arrays = self.simple_encode(sub_arrays)
-        return encode_array
+        above_array = sub_arrays[0] + sub_arrays[1] + sub_arrays[2] + sub_arrays[3]
+        above_array = np.array(above_array)
+        above_array = self.simple_encode(above_array)
+        return above_array
 
     def find_fit(self, array, time_list):
         zero_indices = np.where(np.array(time_list) == 0)[0]
@@ -192,7 +196,7 @@ class GA(object):
         time2 = 0
         for i in range(len(zero_indices)):
             new_array1.append(array[zero_indices[i]])
-            time1 = self.comp_time(new_array1, 0)
+        time1 = self.comp_time(new_array1, 0)
         for i in range(len(no_indices)):
             new_array1.append(array[no_indices[i]])
 
@@ -220,6 +224,7 @@ class GA(object):
         while index != len(array)-1:
             next_time = time_matrix[array[index], array[index+1]]
             current_time += next_time
+            index += 1
             if flag == 0 and current_time > 4:
                 return False
         return current_time
@@ -254,7 +259,10 @@ class GA(object):
             for arr in range(len(sub_array)-1):
                 cur_freeze_weight = send_data.loc[sub_array[arr], '冷冻发货量(吨)']
                 cur_cold_weight = send_data.loc[sub_array[arr], '冷藏发货量(吨)']
-                current_distance = self.distance_matrix(sub_array[arr], sub_array[arr+1])
+                if sub_array[arr] != sub_array[arr+1]:
+                    current_distance = self.distance_matrix(sub_array[arr], sub_array[arr+1])
+                else:
+                    current_distance = 0
                 variable_cost += freeze_weight * current_distance * 0.005
                 variable_cost += cold_weight * current_distance * 0.0035
                 freeze_weight -= cur_freeze_weight
@@ -276,66 +284,7 @@ class GA(object):
                 i += 1
         self.sub_sel = [self.chrom[x] for x in index]
 
-    # def cross_sub(self):
-    #     if self.select_num % 2 == 0:
-    #         num = range(0, int(self.select_num), 2)
-    #     else:
-    #         num = range(0, int(self.select_num + 1), 2)
-    #     for i in num:
-    #         if self.cross_prob >= np.random.rand():
-    #             self.sub_sel[i], self.sub_sel[i + 1] = self.cross_func(self.sub_sel[i], self.sub_sel[i + 1])
-    #
-    # def cross_func(self, array1, array2):
-    #     zero_indices1 = np.where(array1 == 0)[0]
-    #     zero_pos1 = random.choice(range(len(zero_indices1)-1))
-    #     zero_indices2 = np.where(array2 == 0)[0]
-    #     zero_pos2 = random.choice(range(len(zero_indices2)-1))
-    #     slice1 = array1[zero_indices1[zero_pos1]+1:zero_indices1[zero_pos1+1]]
-    #     slice2 = array2[zero_indices2[zero_pos2]+1:zero_indices2[zero_pos2+1]]
-    #
-    #     decode_slice1 = self.decode(slice1)
-    #     decode_slice2 = self.decode(slice2)
-    #     decode_array1 = self.decode(array1)
-    #     decode_array2 = self.decode(array2)
-    #
-    #     new_array1 = np.array([x for x in decode_array2 if x not in slice1])
-    #     new_array2 = np.array([x for x in decode_array1 if x not in slice2])
-    #     new_array1 = np.concatenate((slice1, new_array1))
-    #     new_array2 = np.concatenate((slice2, new_array2))
-    #     encode_array1 = self.encode(new_array1)
-    #     encode_array2 = self.encode(new_array2)
-    #     return encode_array1, encode_array2
-    #
-    # def mutation_sub(self):
-    #     for index, array in enumerate(self.sub_sel):
-    #         # if index < 30:
-    #         #     continue
-    #         if np.random.rand() <= self.pmuta_prob:
-    #             flag, mutate_array = self.mutate_func(array)
-    #             if flag == True:
-    #                 self.sub_sel[index] = mutate_array
-    #
-    # def mutate_func(self, array):
-    #     mutate_num = 10
-    #     mutate_array = []
-    #     fitness = []
-    #     for i in range(mutate_num):
-    #         p1, p2 = random.choices(list(i for i in range(1, len(array)) if array[i] != 0), k=2)
-    #         new_array = array.copy()
-    #         new_array[p1], new_array[p2] = new_array[p2], new_array[p1]
-    #         new_array = self.decode(new_array)
-    #         new_array = self.encode(new_array)
-    #         fit, new_array = self.comp_fit(new_array)
-    #         new_array = self.encode(new_array)
-    #         fitness.append(fit)
-    #         mutate_array.append(new_array)
-    #
-    #     if len(fitness):
-    #         sorted_with_index = sorted(enumerate(fitness), key=lambda x: x[1])
-    #         min_value_index = sorted_with_index[0][0]
-    #         return True, mutate_array[min_value_index]
-    #     else:
-    #         return False, []
+
 
     def reins(self):
         index = np.argsort(self.fitness)[::-1]  # 替换最差的（倒序）
@@ -362,7 +311,7 @@ if __name__ == "__main__":
     for i in send_data.index:
         filt = (df['到达门店简称'] == send_data.loc[i, '门店名称'])
         send_data.loc[i, '门店名称'] = df.loc[filt, '到达门店简称'].index[0]
-    df3 = pd.DataFrame([0, 0, 0, 0, 0, 0]).T
+    df3 = pd.DataFrame([0, 0, 0, 0, 0]).T
     df3.columns = send_data.columns
     send_data = pd.concat([df3, send_data], ignore_index=True)
     send_data['总货量'] = send_data['冷冻发货量(吨)'] + send_data['冷藏发货量(吨)']
