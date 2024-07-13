@@ -7,7 +7,7 @@ from copy import deepcopy
 
 
 class GA(object):
-    def __init__(self, time_matrix, send_array, maxgen=1000, size_pop=50000, cross_prob=0.80, pmuta_prob=0.02, select_prob=0.8):
+    def __init__(self, time_matrix, send_array, maxgen=500, size_pop=100000, cross_prob=0.80, pmuta_prob=0.02, select_prob=0.8):
         self.maxgen = maxgen  # 最大迭代次数
         self.size_pop = size_pop  # 群体个数
         self.cross_prob = cross_prob  # 交叉概率
@@ -144,7 +144,7 @@ class GA(object):
             if len(encode_array1[encode_array1 == 0]) < len(encode_array2[encode_array2 == 0]):
                 return len(encode_array1[encode_array1 == 0]), self.decode(encode_array1)
             else:
-                return len(encode_array2[encode_array2 == 0]), encode_array2
+                return len(encode_array2[encode_array2 == 0]), self.decode(encode_array2)
         else:
             encode_array1 = self.encode(new_array1)
             return len(encode_array1[encode_array1 == 0]), self.decode(encode_array1)
