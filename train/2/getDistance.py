@@ -38,7 +38,7 @@ time_matrix = np.zeros((len(df), len(df)))
 for i in range(len(df)):
     for j in range(len(df)):
         distance = haversine(df.loc[i, '经度'], df.loc[i, '纬度'],
-                             df.loc[j, '经度'], df.loc[j, '纬度']) / 60
+                             df.loc[j, '经度'], df.loc[j, '纬度'])
         if distance == 0:
             distance = np.nan
         time_matrix[i][j] = distance
@@ -51,7 +51,7 @@ time_matrix = time_matrix.set_index(df['到达门店简称'])
 time_matrix.drop(columns=['亳州谯城', '阜阳颍州', '南通通州'], inplace=True)
 time_matrix.drop(index=['亳州谯城', '阜阳颍州', '南通通州'], inplace=True)
 print(time_matrix)
-time_matrix.to_excel('./time_matrix.xlsx', index=True)
+time_matrix.to_excel('./distance_matrix.xlsx', index=True)
 
 x_ticks = time_matrix.columns
 y_ticks = time_matrix.columns
