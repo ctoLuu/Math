@@ -7,7 +7,7 @@ from copy import deepcopy
 
 
 class GA(object):
-    def __init__(self, time_matrix, send_array, maxgen=400, size_pop=10000, cross_prob=0.80, pmuta_prob=0.02, select_prob=0.8):
+    def __init__(self, time_matrix, send_array, maxgen=400, size_pop=20000, cross_prob=0.80, pmuta_prob=0.02, select_prob=0.8):
         self.maxgen = maxgen  # 最大迭代次数
         self.size_pop = size_pop  # 群体个数
         self.cross_prob = cross_prob  # 交叉概率
@@ -103,7 +103,7 @@ class GA(object):
                         flag = 1
                         break
                 if flag == 0:
-                    if time_list[time_list == 0] > 1 and time_list[0] == 1:
+                    if time_list.count(0) > 1 and time_list[0] == 1:
                         zero_indices = np.where(np.array(time_list) == 0)[0]
                         res, sub_array = self.find_fit(arr, time_list)
                         new_array += list(sub_array)
@@ -115,7 +115,40 @@ class GA(object):
                 else:
                     flag = 0
         array = self.encode(new_array)
-        return fitness, array
+        punish = self.check(array)
+        return fitness + punish, array
+
+    def check(self, array):
+        zero_indices = np.where(array == 0)[0]
+        sub_arrays = []
+        start_index = 0
+        for index in zero_indices:
+            sub_arrays.append(array[start_index:index])
+            start_index = index + 1
+        sub_arrays.append(array[start_index:])
+
+        flag = 0
+        for arr in sub_arrays:
+            if len(arr) == 0:
+                continue
+            time_list = []
+            for i in arr:
+                time_list.append(self.send_array[i])
+            if len(time_list) < 3:
+                continue
+            elif len(time_list) == 3:
+                for i in range(len(time_list) - 2):
+                    if time_list[i] == 0 and time_list[i + 1] == 1 and time_list[i + 2] == 0:
+                        return self.punishment
+                    if time_list[i] == 1 and time_list[i + 1] == 0 and time_list[i + 2] == 1:
+                        return self.punishment
+            elif len(time_list) > 3:
+                for i in range(len(time_list) - 1):
+                    if time_list[i] != time_list[i + 1]:
+                        for index in range(i+1, len(time_list) - 1):
+                            if time_list[index] != time_list[index + 1]:
+                                return self.punishment
+        return 0
 
     def find_fit(self, array, time_list):
         res = 0
@@ -284,10 +317,11 @@ if __name__ == "__main__":
             print('第' + str(i + 1) + '代后的最短的路程: ' + str(module.fitness[index]))
             print('第' + str(i + 1) + '代后的最优路径:')
             # module.out_path(module.chrom[index])  # 显示每一步的最优路径
+            print(module.chrom[index])
 
         # 存储每一步的最优路径及距离
         module.best_fit.append(module.fitness[index])
         module.best_path.append(module.chrom[index])
 
-    best = module.chrom[0]
-    print(best)
+
+    print(module.best_path[module.size_pop - 1])
