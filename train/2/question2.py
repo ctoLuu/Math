@@ -160,7 +160,7 @@ class GA(object):
                             flag = 1
                             break
                     if flag == 0:
-                        if time_list[time_list == 0] > 1 and time_list[0] == 1:
+                        if time_list.count(0) > 1 and time_list[0] == 1:
                             zero_indices = np.where(np.array(time_list) == 0)[0]
                             new_arr = self.find_fit(arr, time_list)
                             final += list(new_arr)
@@ -173,17 +173,17 @@ class GA(object):
                 time_list = []
                 for i in arrs[0]:
                     time_list.append(self.send_data.loc[i, '配送时间'])
-                if time_list[time_list != 0] > 0:
-                    new_sub_array += arrs[0]
+                if time_list.count(1) > 0:
+                    new_sub_array += list(arrs[0])
                 else:
-                    arrs[0] += new_sub_array
-                    new_sub_array = arrs[0]
-                new_sub_array += arrs[0]
+                    print(arrs[0])
+                    arrs[0] += list(new_sub_array)
+                    new_sub_array = list(arrs[0])
             new_sub_array += final
             new_sub_array = np.array(new_sub_array)
             sub_arrays[index] = new_sub_array
             index += 1
-        above_array = sub_arrays[0] + sub_arrays[1] + sub_arrays[2] + sub_arrays[3]
+        above_array = list(sub_arrays[0]) + list(sub_arrays[1]) + list(sub_arrays[2]) + list(sub_arrays[3])
         above_array = np.array(above_array)
         above_array = self.simple_encode(above_array)
         return above_array
@@ -213,6 +213,7 @@ class GA(object):
             if len(encode_array1[encode_array1 == 0]) < len(encode_array2[encode_array2 == 0]):
                 return self.decode(encode_array1)
             else:
+
                 return self.decode(encode_array2)
         else:
             encode_array1 = self.simple_encode(new_array1)
@@ -222,7 +223,7 @@ class GA(object):
         index = 0
         current_time = 0
         while index != len(array)-1:
-            next_time = time_matrix[array[index], array[index+1]]
+            next_time = time_matrix[self.send_data.loc[array[index], '门店名称'], self.send_data.loc[array[index+1], '门店名称']]
             current_time += next_time
             index += 1
             if flag == 0 and current_time > 4:
@@ -260,7 +261,7 @@ class GA(object):
                 cur_freeze_weight = send_data.loc[sub_array[arr], '冷冻发货量(吨)']
                 cur_cold_weight = send_data.loc[sub_array[arr], '冷藏发货量(吨)']
                 if sub_array[arr] != sub_array[arr+1]:
-                    current_distance = self.distance_matrix(sub_array[arr], sub_array[arr+1])
+                    current_distance = self.distance_matrix(send_data.loc[sub_array[arr], '门店名称'], send_data.loc[sub_array[arr], '门店名称'])
                 else:
                     current_distance = 0
                 variable_cost += freeze_weight * current_distance * 0.005
@@ -318,7 +319,7 @@ if __name__ == "__main__":
 
     distance_matrix = pd.read_excel('./distance_matrix.xlsx')
     distance_matrix.set_index(['到达门店简称'], inplace=True)
-    distance_matrix = distance_matrix.to_numpy(dtype=float)
+    print(distance_matrix)
 
     module = GA(time_matrix, distance_matrix, send_data, send_array)
     module.rand_chrom()
