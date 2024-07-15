@@ -177,8 +177,9 @@ class GA(object):
                     new_sub_array += list(arrs[0])
                 else:
                     print(arrs[0])
-                    arrs[0] += list(new_sub_array)
-                    new_sub_array = list(arrs[0])
+                    list_arr = list(arrs[0])
+                    list_arr += list(new_sub_array)
+                    new_sub_array = list(list_arr)
             new_sub_array += final
             new_sub_array = np.array(new_sub_array)
             sub_arrays[index] = new_sub_array
@@ -260,8 +261,8 @@ class GA(object):
             for arr in range(len(sub_array)-1):
                 cur_freeze_weight = send_data.loc[sub_array[arr], '冷冻发货量(吨)']
                 cur_cold_weight = send_data.loc[sub_array[arr], '冷藏发货量(吨)']
-                if sub_array[arr] != sub_array[arr+1]:
-                    current_distance = self.distance_matrix(send_data.loc[sub_array[arr], '门店名称'], send_data.loc[sub_array[arr], '门店名称'])
+                if send_data.loc[sub_array[arr], '门店名称'] != send_data.loc[sub_array[arr+1], '门店名称']:
+                    current_distance = self.distance_matrix[send_data.loc[sub_array[arr], '门店名称'], send_data.loc[sub_array[arr+1], '门店名称']]
                 else:
                     current_distance = 0
                 variable_cost += freeze_weight * current_distance * 0.005
@@ -319,6 +320,7 @@ if __name__ == "__main__":
 
     distance_matrix = pd.read_excel('./distance_matrix.xlsx')
     distance_matrix.set_index(['到达门店简称'], inplace=True)
+    distance_matrix = distance_matrix.to_numpy()
     print(distance_matrix)
 
     module = GA(time_matrix, distance_matrix, send_data, send_array)
@@ -331,7 +333,7 @@ if __name__ == "__main__":
         module.reins()
 
         for j in range(module.size_pop):
-            module.fitness[j], _ = module.comp_fit(module.chrom[j])
+            module.fitness[j] = module.comfit(module.chrom[j])
 
 
         index = module.fitness.argmin()
