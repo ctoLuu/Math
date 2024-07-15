@@ -271,6 +271,9 @@ class GA(object):
 
         return variable_cost + fixed_cost
 
+
+
+
     def select_sub(self):
         fit = 1. / self.fitness
         sum_fit = np.cumsum(fit)
