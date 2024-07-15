@@ -24,12 +24,15 @@ def OutlierDetection(df, column, ks_res):
     u = df[column].mean()
     # 计算标准差
     std = df[column].std()
-
+    count = 0
     if ks_res == 1:
         # 定义3σ法则识别异常值
         lower_bound = u - 3 * std
         upper_bound = u + 3 * std
         # 将异常值替换为np.nan
+        count = ((df[column] < lower_bound) | (df[column] > upper_bound)).sum()
+        print('异常值个数')
+        print(count)
         df.loc[(df[column] < lower_bound) | (df[column] > upper_bound), column] = np.nan
         return df
     elif ks_res == 0:
@@ -39,6 +42,9 @@ def OutlierDetection(df, column, ks_res):
         lower_bound = Q1 - 1.5 * IQR
         upper_bound = Q3 + 1.5 * IQR
         # 将异常值替换为np.nan
+        count = ((df[column] < lower_bound) | (df[column] > upper_bound)).sum()
+        print('异常值个数')
+        print(count)
         df.loc[(df[column] < lower_bound) | (df[column] > upper_bound), column] = np.nan
         return df
     else:
