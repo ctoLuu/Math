@@ -12,6 +12,7 @@ class GA(object):
         self.cross_prob = cross_prob  # 交叉概率
         self.pmuta_prob = pmuta_prob  # 变异概率
         self.select_prob = select_prob  # 选择概率
+        self.punishment = 99999999999
 
         self.time_matrix = time_matrix
         self.distance_matrix = distance_matrix
@@ -229,6 +230,8 @@ class GA(object):
             index += 1
             if flag == 0 and current_time > 4:
                 return False
+        if index == 0:
+            return True
         return current_time
 
     def decode(self, array):
@@ -269,8 +272,39 @@ class GA(object):
                 variable_cost += cold_weight * current_distance * 0.0035
                 freeze_weight -= cur_freeze_weight
                 cold_weight -= cur_cold_weight
-
+        self.check(array)
         return variable_cost + fixed_cost
+
+    def check(self ,array):
+        zero_indices = np.where(array == 0)[0]
+        sub_arrays = []
+        start_index = 0
+        for index in zero_indices:
+            sub_arrays.append(array[start_index:index])
+            start_index = index + 1
+        sub_arrays.append(array[start_index:])
+
+        for arr in sub_arrays:
+            if len(arr) == 0:
+                continue
+            time_list = []
+            for i in arr:
+                time_list.append(self.send_array[i])
+            if len(time_list) < 3:
+                continue
+            elif len(time_list) == 3:
+                for i in range(len(time_list) - 2):
+                    if time_list[i] == 0 and time_list[i + 1] == 1 and time_list[i + 2] == 0:
+                        return self.punishment
+                    if time_list[i] == 1 and time_list[i + 1] == 0 and time_list[i + 2] == 1:
+                        return self.punishment
+            elif len(time_list) > 3:
+                for i in range(len(time_list) - 1):
+                    if time_list[i] != time_list[i + 1]:
+                        for index in range(i + 1, len(time_list) - 1):
+                            if time_list[index] != time_list[index + 1]:
+                                return self.punishment
+        return 0
 
     def select_sub(self):
         fit = 1. / self.fitness
@@ -286,7 +320,50 @@ class GA(object):
                 i += 1
         self.sub_sel = [self.chrom[x] for x in index]
 
+    def cross_sub(self):
+        if self.select_num % 2 == 0:
+            num = range(0, int(self.select_num), 2)
+        else:
+            num = range(0, int(self.select_num + 1), 2)
+        for i in num:
+            if self.cross_prob >= np.random.rand():
+                self.sub_sel[i], self.sub_sel[i + 1] = self.cross_func(self.sub_sel[i], self.sub_sel[i + 1])
 
+    def cross_fun(self, array1, array2):
+        zero_indices1 = np.where(array1 == 0)[0]
+        zero_pos1 = random.choice(range(len(zero_indices1) - 1))
+        zero_indices2 = np.where(array2 == 0)[0]
+        zero_pos2 = random.choice(range(len(zero_indices2) - 1))
+
+    def mutation_sub(self):
+        for index, array in enumerate(self.sub_sel):
+            # if index < 30:
+            #     continue
+            if np.random.rand() <= self.pmuta_prob:
+                flag, mutate_array = self.mutate_func(array)
+                if flag == True:
+                    self.sub_sel[index] = mutate_array
+
+    def mutate_func(self, array):
+        mutate_num = 10
+        mutate_array = []
+        fitness = []
+        for i in range(mutate_num):
+            p1, p2 = random.choices(list(i for i in range(1, len(array)) if array[i] != 0), k=2)
+            new_array = array.copy()
+            new_array[p1], new_array[p2] = new_array[p2], new_array[p1]
+            new_array = self.decode(new_array)
+            new_array = self.encode(new_array)
+            fit, new_array = self.comp_fit(new_array)
+            fitness.append(fit)
+            mutate_array.append(new_array)
+
+        if len(fitness):
+            sorted_with_index = sorted(enumerate(fitness), key=lambda x: x[1])
+            min_value_index = sorted_with_index[0][0]
+            return True, mutate_array[min_value_index]
+        else:
+            return False, []
 
     def reins(self):
         index = np.argsort(self.fitness)[::-1]  # 替换最差的（倒序）
@@ -327,8 +404,8 @@ if __name__ == "__main__":
     module.rand_chrom()
     for i in range(module.maxgen):
         module.select_sub()
-        # module.cross_sub()
-        # module.mutation_sub()
+        module.cross_sub()
+        module.mutation_sub()
         # module.reverse_sub()
         module.reins()
 
