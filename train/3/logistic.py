@@ -6,6 +6,7 @@ from sklearn.linear_model import LogisticRegression
 from imblearn.over_sampling import SMOTE
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score, classification_report
 
+
 def train_logistic_regression_with_pca(data, oversample=True, pca_components=20, random_state=None):
     X = data.iloc[:, 3:]
     y = data['y']
@@ -22,12 +23,13 @@ def train_logistic_regression_with_pca(data, oversample=True, pca_components=20,
     pca = PCA(n_components=pca_components, random_state=random_state)
     X_pca = pca.fit_transform(X_scaled)
 
-    lr_classifier = LogisticRegression(random_state=random_state)
+    lr_classifier = LogisticRegression(penalty='l2', solver='lbfgs', max_iter=500, random_state=random_state)
     lr_classifier.fit(X_pca, y_resampled)
 
     train_accuracy = accuracy_score(y_resampled, lr_classifier.predict(X_pca))
 
     return lr_classifier, pca, scaler, train_accuracy
+
 
 def predict_customer_intent(customer_data, model, pca, scaler):
     X_customer = customer_data.iloc[:, 3:]
@@ -46,9 +48,11 @@ def predict_customer_intent(customer_data, model, pca, scaler):
         })
     return results
 
+
 def create_dataset(data):
     train, test = train_test_split(data, test_size=0.2, random_state=0)
     return train, test
+
 
 def evaluate_model(model, test_data, test_labels, pca, scaler):
     X_test = test_data.iloc[:, 3:]
@@ -65,6 +69,7 @@ def evaluate_model(model, test_data, test_labels, pca, scaler):
     report = classification_report(test_labels, predictions, output_dict=True)
 
     return test_accuracy, f1, recall, precision, report
+
 
 # 读取数据
 customer_data = pd.read_excel('customer_data.xlsx')
