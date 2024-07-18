@@ -6,9 +6,9 @@ plt.rcParams['font.sans-serif'] = ['SimHei']
 
 df = pd.read_excel('./handledData.xlsx')
 # colors = ['#9999ff', '#2442aa', "blue"]
-edu = [1581 / 9586, 8005 / 9586]
-labels = ['分期用户', '非分期用户']
-explode = [0.2, 0]  # 生成数据，用于凸显大专学历人群
+edu = [1679 / 9586, 1487 / 9586, 1599 / 9586, 1699 / 9586, 1465 / 9586, 1657 / 9586]
+labels = ['重要价值用户', '重要挽留用户','重要保持用户','一般挽留用户','一般保持用户','重要发展用户']
+explode = [0.2, 0, 0, 0, 0,0]  # 生成数据，用于凸显大专学历人群
 colors = sns.color_palette("pastel")
 plt.pie(x=edu,  # 绘图数据
         explode=explode,  # 指定饼图某些部分的突出显示，即呈现爆炸式
