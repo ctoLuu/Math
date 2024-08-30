@@ -103,10 +103,16 @@ def prepare_data(file_path):
     data['user_id'] = lbe_user.fit_transform(data['CustomerID'])
     data['item_id'] = lbe_item.fit_transform(data['StockCode'])
     item_id_to_stockcode = dict(zip(lbe_item.transform(lbe_item.classes_), lbe_item.classes_))
-    train_weeks = months[:5]
-    test_weeks = months[5:6]
+    train_weeks = months[:]
+
+    random_values = np.random.choice(data['user_id'].values, size=1000, replace=False)
+    repeated_values = np.repeat(random_values, 3665)
+    test_data = pd.DataFrame()
+    test_data['user_id'] = repeated_values
+    test_data['item_id'] = np.tile(np.arange(3665), len(random_values))
+
     train_data = data.loc[data['Month'].isin(train_weeks)]
-    test_data = data.loc[data['Month'].isin(test_weeks)]
+
 
     return train_data, test_data, item_id_to_stockcode, data
 
@@ -171,4 +177,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
